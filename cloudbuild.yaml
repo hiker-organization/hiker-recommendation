@@ -1,0 +1,14 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -f
+      - job/Dockerfile
+      - -t
+      - us-central1-docker.pkg.dev/$PROJECT_ID/pipeline/recomendacao:$SHORT_SHA
+      - -t
+      - us-central1-docker.pkg.dev/$PROJECT_ID/pipeline/recomendacao:latest
+      - .
+images:
+  - us-central1-docker.pkg.dev/$PROJECT_ID/pipeline/recomendacao:$SHORT_SHA
+  - us-central1-docker.pkg.dev/$PROJECT_ID/pipeline/recomendacao:latest

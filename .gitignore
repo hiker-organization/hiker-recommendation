@@ -1,2 +1,6 @@
 .env
-README.md
+dados/
+artefatos/
+logs/
+__pycache__/
+.vscode/
