@@ -37,8 +37,7 @@ def publicar(recs, versao, gerado_em):
             ON CONFLICT (user_id, post_id) DO UPDATE
             SET rank = EXCLUDED.rank, modelo_versao = EXCLUDED.modelo_versao, gerado_em = EXCLUDED.gerado_em
         """).format(tabela), list(registros))
+        # Remove recomendações de execuções anteriores, para não sobrar lixo no banco
         cur.execute(sql.SQL("DELETE FROM {} WHERE gerado_em < %s").format(tabela), (gerado_em,))
 
-    # Remove recomendações de execuções anteriores, para não sobrar lixo no banco
-    tabela.delete().lt("gerado_em", gerado_em).execute()
     return config.TABELA_RECOMENDACOES
