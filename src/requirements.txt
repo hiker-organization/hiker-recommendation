@@ -3,6 +3,6 @@ numpy
 scipy
 implicit
 scikit-learn
-supabase
+psycopg[binary]
 python-dotenv
 joblib

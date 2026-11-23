@@ -1,20 +1,15 @@
 import pandas as pd
 import config
+import psycopg
+from psycopg import sql
 
 """Deve ser alterado futuramente para extrair da GCP"""
-def _ler_tabela_supabase(client, nome, pagina=1000):
-    """Lê a tabela inteira em páginas, porque o Supabase limita o número de linhas por consulta.
-        Cliente é o objeto que representa a conexão com o supabase"""
-    linhas, inicio = [], 0
-    while True:
-        r = (client.table(nome).select("*").order("id")
-             .range(inicio, inicio + pagina - 1).execute())
-        dados = r.data or []
-        linhas.extend(dados)
-        if len(dados) < pagina:
-            break
-        inicio += pagina
-    return pd.DataFrame(linhas)
+def _ler_tabela(conn, nome):
+    query = sql.SQL("SELECT * FROM {} ORDER BY id").format(sql.Identifier(nome))
+    with conn.cursor() as cur:
+        cur.execute(query)
+        colunas = [c.name for c in cur.description]
+        return pd.DataFrame(cur.fetchall(), columns=colunas)    
 
 
 def extrair():
@@ -28,11 +23,10 @@ def extrair():
             "Tag_review": pd.read_csv(f"{pasta}/Tag_review_rows.csv"),
         }
 
-    from supabase import create_client
-    client = create_client(config.SUPABASE_URL, config.SUPABASE_SERVICE_KEY)
-    return {
-        "Voto_review": _ler_tabela_supabase(client, config.TABELA_INTERACOES),
-        "Review": _ler_tabela_supabase(client, config.TABELA_POSTS),
-        "Tag": _ler_tabela_supabase(client, config.TABELA_TAGS),
-        "Tag_review": _ler_tabela_supabase(client, config.TABELA_TAG_POST),
-    }
+    with psycopg.connect(config.DATABASE_URL) as conn:
+        return {
+            "Voto_review": _ler_tabela(conn, config.TABELA_INTERACOES),
+            "Review": _ler_tabela(conn, config.TABELA_POSTS),
+            "Tag": _ler_tabela(conn, config.TABELA_TAGS),
+            "Tag_review": _ler_tabela(conn, config.TABELA_TAG_POST),
+        }

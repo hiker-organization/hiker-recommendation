@@ -24,13 +24,20 @@ def publicar(recs, versao, gerado_em):
         recs.to_csv(caminho, index=False)
         return caminho
 
-    from supabase import create_client
-    client = create_client(config.SUPABASE_URL, config.SUPABASE_SERVICE_KEY)
-    tabela = client.table(config.TABELA_RECOMENDACOES)
+    import psycopg
+    from psycopg import sql
 
-    registros = recs[["user_id", "post_id", "rank", "modelo_versao", "gerado_em"]].to_dict("records")
-    for lote in _lotes(registros, 500):
-        tabela.upsert(lote, on_conflict="user_id,post_id").execute()
+    registros = recs[["user_id", "post_id", "rank", "modelo_versao", "gerado_em"]].itertuples(index=False, name=None)
+    tabela = sql.Identifier(config.TABELA_RECOMENDACOES)
+
+    with psycopg.connect(config.DATABASE_URL) as conn, conn.cursor() as cur:
+        cur.executemany(sql.SQL("""
+            INSERT INTO {} (user_id, post_id, rank, modelo_versao, gerado_em)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (user_id, post_id) DO UPDATE
+            SET rank = EXCLUDED.rank, modelo_versao = EXCLUDED.modelo_versao, gerado_em = EXCLUDED.gerado_em
+        """).format(tabela), list(registros))
+        cur.execute(sql.SQL("DELETE FROM {} WHERE gerado_em < %s").format(tabela), (gerado_em,))
 
     # Remove recomendações de execuções anteriores, para não sobrar lixo no banco
     tabela.delete().lt("gerado_em", gerado_em).execute()

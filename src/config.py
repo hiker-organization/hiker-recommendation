@@ -4,8 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Supabase (use a service_role key apenas no backend, nunca no app)
-SUPABASE_URL = os.getenv("SUPABASE_URL", "")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
+DATABASE_URL = os.getenv("DATABASE_URL", "")
 
 # Nomes das tabelas no Supabase (ajuste para os nomes reais)
 TABELA_INTERACOES = os.getenv("TABELA_INTERACOES", "Voto_review")
@@ -17,7 +16,7 @@ TABELA_RECOMENDACOES = os.getenv("TABELA_RECOMENDACOES", "Recomendacao")
 # Modo de desenvolvimento: se preenchido, lê CSVs dessa pasta em vez do Supabase
 DADOS_LOCAIS = os.getenv("DADOS_LOCAIS", "")
 # "supabase" grava no banco; "csv" grava em artefatos/recomendacoes.csv
-DESTINO = os.getenv("DESTINO", "supabase")
+DESTINO = os.getenv("DESTINO", "database")
 
 # Parâmetros do modelo (fixados após a avaliação no notebook)
 K = 5
